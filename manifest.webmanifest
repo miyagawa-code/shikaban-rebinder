@@ -1,0 +1,17 @@
+{
+  "name": "私家版リバインダー",
+  "short_name": "リバインダー",
+  "description": "自分で撮った画面収録・スクリーンショットから、自分で読むためのPDFを組む。処理は端末の中だけで完結する。",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#E7E8E3",
+  "theme_color": "#274C77",
+  "lang": "ja",
+  "icons": [
+    { "src": "./icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "./icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "./icon-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

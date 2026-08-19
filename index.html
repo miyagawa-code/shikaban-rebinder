@@ -1,0 +1,1197 @@
+<title>私家版リバインダー</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@500;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=IBM+Plex+Mono:wght@400;600&display=swap">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="apple-touch-icon" href="./icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="私家版リバインダー">
+<meta name="theme-color" content="#E7E8E3" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#14161A" media="(prefers-color-scheme: dark)">
+
+<style>
+:root{
+  --paper:#E7E8E3; --surface:#F5F6F2; --surface-2:#DFE1DB;
+  --ink:#1A1D1B; --ink-2:#5A605C; --ink-3:#858B85;
+  --line:#C9CCC4; --line-strong:#A9AEA5;
+  --ai:#274C77; --ai-bright:#3D6FA5; --ai-wash:#DCE4EE; --on-ai:#F5F6F2;
+  --shu:#A8412F; --shu-wash:#F0DCD7;
+  --koke:#4A7150; --koke-wash:#DCE7DC;
+  --kohaku:#8A6714; --kohaku-wash:#EFE5CC;
+  --display:"Shippori Mincho B1","Hiragino Mincho ProN","Yu Mincho",serif;
+  --body:"Zen Kaku Gothic New","Hiragino Sans","Hiragino Kaku Gothic ProN",system-ui,sans-serif;
+  --data:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  --r:10px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#14161A; --surface:#1C1F25; --surface-2:#262A31;
+    --ink:#E4E6E3; --ink-2:#9AA0A0; --ink-3:#727876;
+    --line:#2E333B; --line-strong:#414750;
+    --ai:#7FA9D8; --ai-bright:#A6C6E8; --ai-wash:#1E2A38; --on-ai:#12151A;
+    --shu:#E07A64; --shu-wash:#33201C;
+    --koke:#7FB088; --koke-wash:#1B2A1F;
+    --kohaku:#D6AC5A; --kohaku-wash:#2C2415;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#14161A; --surface:#1C1F25; --surface-2:#262A31;
+  --ink:#E4E6E3; --ink-2:#9AA0A0; --ink-3:#727876;
+  --line:#2E333B; --line-strong:#414750;
+  --ai:#7FA9D8; --ai-bright:#A6C6E8; --ai-wash:#1E2A38; --on-ai:#12151A;
+  --shu:#E07A64; --shu-wash:#33201C;
+  --koke:#7FB088; --koke-wash:#1B2A1F;
+  --kohaku:#D6AC5A; --kohaku-wash:#2C2415;
+}
+
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--paper); color:var(--ink);
+  font-family:var(--body); font-size:16px; line-height:1.75;
+  -webkit-text-size-adjust:100%; -webkit-tap-highlight-color:transparent;
+}
+.wrap{max-width:54rem; margin:0 auto; padding:0 1.15rem 6rem}
+
+/* ── 帳面の見出し ── */
+header.masthead{
+  padding:2.6rem 0 1.4rem; border-bottom:1px solid var(--line);
+  display:flex; flex-direction:column; gap:.5rem;
+}
+.eyebrow{
+  font-family:var(--data); font-size:.7rem; letter-spacing:.22em;
+  text-transform:uppercase; color:var(--ink-3);
+}
+h1{
+  font-family:var(--display); font-weight:700; font-size:clamp(1.9rem,6vw,2.6rem);
+  margin:0; line-height:1.25; text-wrap:balance; letter-spacing:.02em;
+}
+.lede{margin:.35rem 0 0; color:var(--ink-2); font-size:.95rem; max-width:40rem}
+
+/* ── 状態バー ── */
+.statusbar{
+  position:sticky; top:0; z-index:20; margin:0 -1.15rem; padding:.55rem 1.15rem;
+  background:color-mix(in srgb, var(--paper) 88%, transparent);
+  backdrop-filter:saturate(1.4) blur(10px);
+  border-bottom:1px solid var(--line);
+  display:flex; align-items:center; gap:.6rem; flex-wrap:wrap;
+  font-size:.82rem;
+}
+.statusbar strong{font-family:var(--display); font-weight:500; letter-spacing:.04em}
+
+.chip{
+  display:inline-flex; align-items:center; gap:.35em;
+  padding:.18em .7em; border-radius:999px; font-size:.74rem;
+  font-family:var(--data); letter-spacing:.04em; white-space:nowrap;
+  border:1px solid transparent;
+}
+.chip.idle{background:var(--surface-2); color:var(--ink-2); border-color:var(--line)}
+.chip.ok{background:var(--koke-wash); color:var(--koke); border-color:color-mix(in srgb,var(--koke) 35%,transparent)}
+.chip.warn{background:var(--kohaku-wash); color:var(--kohaku); border-color:color-mix(in srgb,var(--kohaku) 35%,transparent)}
+.chip.stop{background:var(--shu-wash); color:var(--shu); border-color:color-mix(in srgb,var(--shu) 40%,transparent)}
+.chip.run{background:var(--ai-wash); color:var(--ai); border-color:color-mix(in srgb,var(--ai) 35%,transparent)}
+
+/* ── 工程 ── */
+.steps{display:flex; flex-direction:column; gap:1.15rem; margin-top:1.6rem}
+section.step{
+  position:relative; background:var(--surface); border:1px solid var(--line);
+  border-radius:var(--r); padding:1.15rem 1.15rem 1.3rem;
+}
+section.step[data-locked="true"]{opacity:.45}
+section.step[data-locked="true"] .body{display:none}
+.step-head{display:flex; align-items:baseline; gap:.75rem}
+.kanji{
+  font-family:var(--display); font-weight:700; font-size:1.15rem; color:var(--ai);
+  min-width:1.5em; text-align:center; line-height:1;
+  border-right:1px solid var(--line); padding-right:.6rem; align-self:stretch;
+  display:flex; align-items:center; justify-content:center;
+}
+h2{font-family:var(--display); font-weight:500; font-size:1.12rem; margin:0; letter-spacing:.05em}
+.step-note{color:var(--ink-2); font-size:.87rem; margin:.15rem 0 0}
+.body{margin-top:1rem; display:flex; flex-direction:column; gap:.9rem}
+
+/* ── 部品 ── */
+button, .filebtn{
+  font-family:var(--body); font-size:.95rem; font-weight:500;
+  min-height:46px; padding:.6rem 1.1rem; border-radius:8px;
+  border:1px solid var(--line-strong); background:var(--surface-2); color:var(--ink);
+  cursor:pointer; display:inline-flex; align-items:center; justify-content:center; gap:.45em;
+}
+button.primary{background:var(--ai); border-color:var(--ai); color:var(--on-ai)}
+button.danger{background:var(--shu-wash); border-color:var(--shu); color:var(--shu)}
+button:disabled{opacity:.4; cursor:not-allowed}
+button:focus-visible, input:focus-visible, .filebtn:focus-visible, label:focus-visible{outline:2px solid var(--ai-bright); outline-offset:2px}
+.row{display:flex; gap:.6rem; flex-wrap:wrap; align-items:center}
+.filebtn{position:relative; overflow:hidden}
+.filebtn input[type=file]{position:absolute; inset:0; opacity:0; font-size:100px; cursor:pointer}
+
+label.check{
+  display:flex; gap:.65rem; align-items:flex-start; padding:.5rem .1rem;
+  font-size:.9rem; line-height:1.6; cursor:pointer; border-bottom:1px dotted var(--line);
+}
+label.check input{width:22px; height:22px; margin:.28rem 0 0; accent-color:var(--ai); flex:none}
+label.check.neg{color:var(--shu)}
+
+.fields{display:grid; grid-template-columns:repeat(auto-fit,minmax(11rem,1fr)); gap:.8rem}
+.field{display:flex; flex-direction:column; gap:.25rem}
+.field label{font-size:.78rem; color:var(--ink-2); font-family:var(--data); letter-spacing:.05em}
+.field input[type=text], .field input[type=number], .field select{
+  font-family:var(--body); font-size:1rem; min-height:44px; padding:.4rem .6rem;
+  background:var(--paper); color:var(--ink); border:1px solid var(--line-strong); border-radius:6px;
+}
+.field input[type=range]{accent-color:var(--ai); min-height:44px}
+.field .val{font-family:var(--data); font-size:.78rem; color:var(--ink-3); font-variant-numeric:tabular-nums}
+
+.note{font-size:.83rem; color:var(--ink-2); margin:0}
+.note.stop{color:var(--shu)}
+.hr{height:1px; background:var(--line); border:0; margin:.2rem 0}
+
+/* ── 進捗 ── */
+.bar{height:6px; background:var(--surface-2); border-radius:999px; overflow:hidden}
+.bar i{display:block; height:100%; width:0%; background:var(--ai); transition:width .18s linear}
+@media (prefers-reduced-motion:reduce){.bar i{transition:none}}
+
+/* ── ページ台 ── */
+.grid{
+  display:grid; grid-template-columns:repeat(auto-fill,minmax(96px,1fr));
+  gap:.5rem; max-height:60vh; overflow-y:auto; padding:.2rem;
+  border:1px solid var(--line); border-radius:8px; background:var(--paper);
+}
+.pg{position:relative; border:1px solid var(--line); border-radius:6px; overflow:hidden; background:var(--surface-2); padding:0; min-height:0; display:block}
+.pg img{display:block; width:100%; height:auto; aspect-ratio:3/4; object-fit:contain; background:var(--surface)}
+.pg .n{
+  position:absolute; left:0; bottom:0; font-family:var(--data); font-size:.64rem;
+  background:color-mix(in srgb,var(--ink) 78%,transparent); color:var(--paper);
+  padding:.05em .4em; border-top-right-radius:5px; font-variant-numeric:tabular-nums;
+}
+.pg .flag{position:absolute; right:2px; top:2px; font-family:var(--data); font-size:.6rem; padding:.05em .35em; border-radius:4px}
+.pg .flag.dup{background:var(--kohaku); color:var(--paper)}
+.pg .flag.prot{background:var(--shu); color:var(--paper)}
+.pg[aria-pressed="true"]{outline:2px solid var(--shu); outline-offset:-2px; opacity:.35}
+.pg[aria-pressed="true"]::after{content:"除外"; position:absolute; inset:auto 0 42% 0; text-align:center; font-size:.7rem; color:var(--shu); font-family:var(--data)}
+
+#scan-view{display:flex; gap:.6rem; align-items:center}
+#scan-view video{width:110px; height:auto; border:1px solid var(--line); border-radius:6px; background:#000}
+.preview{border:1px solid var(--line); border-radius:8px; overflow:hidden; background:var(--surface-2)}
+.preview img{display:block; width:100%; height:auto}
+
+pre.report{
+  font-family:var(--data); font-size:.72rem; line-height:1.6; white-space:pre-wrap; word-break:break-all;
+  background:var(--paper); border:1px solid var(--line); border-radius:8px; padding:.8rem;
+  max-height:22rem; overflow:auto; margin:0;
+}
+table.cmp{width:100%; border-collapse:collapse; font-size:.85rem}
+table.cmp th, table.cmp td{text-align:left; padding:.45rem .5rem; border-bottom:1px solid var(--line); vertical-align:top}
+table.cmp th{font-family:var(--data); font-size:.72rem; letter-spacing:.06em; color:var(--ink-2); font-weight:400}
+.scroll-x{overflow-x:auto}
+
+footer.colophon{
+  margin-top:2.5rem; padding-top:1.2rem; border-top:1px solid var(--line);
+  color:var(--ink-3); font-size:.78rem; display:flex; flex-direction:column; gap:.4rem;
+}
+</style>
+
+<div class="wrap">
+
+<div class="statusbar">
+  <strong>私家版リバインダー</strong>
+  <span class="chip idle" id="st-gate">確認 未</span>
+  <span class="chip idle" id="st-src">素材 未</span>
+  <span class="chip idle" id="st-pages">ページ 0</span>
+  <span class="chip idle" id="st-job">待機</span>
+</div>
+
+<header class="masthead">
+  <div class="eyebrow">private rebinding workbench &middot; ipad only</div>
+  <h1>私家版リバインダー</h1>
+  <p class="lede">
+    自分で購入した本を、自分の iPad で撮った画面収録またはスクリーンショットから、
+    自分で読むためのPDFに製本する。処理はこの画面の中だけで完結し、通信は一切しない。
+  </p>
+</header>
+
+<div class="steps">
+
+<!-- 一 ── 境界と確認 -->
+<section class="step" id="s1">
+  <div class="step-head"><span class="kanji">一</span><div>
+    <h2>境界の確認</h2>
+    <p class="step-note">全部に印が付くまで、以降の工程は開かない。</p>
+  </div></div>
+  <div class="body">
+    <div class="scroll-x"><table class="cmp">
+      <tr><th>やること</th><th>やらないこと</th></tr>
+      <tr>
+        <td>正規アプリが画面に<strong>通常表示している内容</strong>を、iPadOS標準のスクリーンショット／画面収録で自分が撮る。<br>その画像を切り抜き・並べ替え・PDF化する。</td>
+        <td>DRM解除・復号、鍵やトークンの抽出、アプリ内部ファイル／キャッシュ／通信の解析、<br>キャプチャ防止の回避、他人のアカウントからの取得、できたPDFの共有・配布・アップロード。</td>
+      </tr>
+    </table></div>
+    <p class="note stop">画面が黒・白・一様（保護表示）になったら、回避せずそこで停止する。この画面はその判定を自動で行い、検出したら製本を止める。</p>
+    <hr class="hr">
+    <div id="gate">
+      <label class="check"><input type="checkbox" data-g><span>対象は私が購入した、または利用許諾を得た本である</span></label>
+      <label class="check"><input type="checkbox" data-g><span>私自身が正規アプリにログインし、正規ビューアで開いた画面を撮った</span></label>
+      <label class="check"><input type="checkbox" data-g><span>用途は私個人の読書に限る（配布・販売・公開・クラウド投稿をしない）</span></label>
+      <label class="check"><input type="checkbox" data-g><span>各サービスの規約は私が自分で確認した（この画面は適法性を判定しない）</span></label>
+      <label class="check neg"><input type="checkbox" data-g><span>技術的保護手段の回避を求めていないし、行っていない</span></label>
+    </div>
+    <div class="row"><button class="primary" id="btn-gate" disabled>確認して次へ</button></div>
+  </div>
+</section>
+
+<!-- 二 ── 素材 -->
+<section class="step" id="s2" data-locked="true">
+  <div class="step-head"><span class="kanji">二</span><div>
+    <h2>素材の取り込み</h2>
+    <p class="step-note">iPad の「写真」または「ファイル」から選ぶ。読み込むだけで、どこへも送らない。</p>
+  </div></div>
+  <div class="body">
+    <div class="row">
+      <span class="filebtn primary">画面収録を選ぶ<input type="file" accept="video/*" id="in-video"></span>
+      <span class="filebtn">スクリーンショットを選ぶ<input type="file" accept="image/*" multiple id="in-images"></span>
+    </div>
+    <p class="note" id="src-info">画面収録は「各ページで約1秒静止してからめくる」撮り方が前提。スクリーンショットは1ページ1枚、ファイル名順に並べる。</p>
+    <div class="fields">
+      <div class="field"><label for="f-title">書名（PDFの題）</label><input type="text" id="f-title" value="無題" autocomplete="off"></div>
+      <div class="field"><label for="f-dir">綴じ方向</label>
+        <select id="f-dir"><option value="rtl">右綴じ（縦書き・日本語）</option><option value="ltr">左綴じ（横書き・英語）</option></select></div>
+      <div class="field"><label for="f-max">上限ページ数（必須）</label><input type="number" id="f-max" value="300" min="1" max="2000"></div>
+      <div class="field"><label for="f-rate">再生倍率（収録の走査速度）</label>
+        <select id="f-rate"><option value="2">2倍（確実）</option><option value="4" selected>4倍（標準）</option><option value="8">8倍（速い）</option></select></div>
+      <div class="field"><label for="f-stable">静止と見なす時間（秒）</label><input type="number" id="f-stable" value="0.5" min="0.1" max="5" step="0.1"></div>
+      <div class="field"><label for="f-thr">別ページと見なす差（輝度0〜255）</label><input type="number" id="f-thr" value="2.5" min="0.2" max="40" step="0.1"></div>
+    </div>
+  </div>
+</section>
+
+<!-- 三 ── 試験 -->
+<section class="step" id="s3" data-locked="true">
+  <div class="step-head"><span class="kanji">三</span><div>
+    <h2>試験抽出</h2>
+    <p class="step-note">先頭だけ走査して、保護画面でないか・ページが分かれるかを見る。ここで承認するまで本処理へ行かない。</p>
+  </div></div>
+  <div class="body">
+    <div class="row"><button class="primary" id="btn-probe">先頭3ページを試す</button><button id="btn-probe-clear">やり直す</button></div>
+    <div class="bar"><i id="probe-bar"></i></div>
+    <p class="note" id="probe-msg">未実行。</p>
+    <div class="grid" id="probe-grid" hidden></div>
+    <div class="row"><button class="primary" id="btn-approve" disabled>この見え方で承認して本処理へ</button></div>
+  </div>
+</section>
+
+<!-- 四 ── 抽出 -->
+<section class="step" id="s4" data-locked="true">
+  <div class="step-head"><span class="kanji">四</span><div>
+    <h2>ページ抽出</h2>
+    <p class="step-note">静止フレームの末尾だけを1ページとして拾い、重複と保護を印付けする。</p>
+  </div></div>
+  <div class="body">
+    <div class="row"><button class="primary" id="btn-run">抽出を開始</button><button class="danger" id="btn-abort" disabled>中止</button></div>
+    <div class="bar"><i id="run-bar"></i></div>
+    <div id="scan-view" hidden></div>
+    <p class="note" id="run-msg">未実行。走査中は画面を消さないこと（iPadOSが処理を止める）。</p>
+    <p class="note">要らないページは押して除外できる。もう一度押すと戻る。</p>
+    <div class="grid" id="page-grid" hidden></div>
+  </div>
+</section>
+
+<!-- 五 ── 整形 -->
+<section class="step" id="s5" data-locked="true">
+  <div class="step-head"><span class="kanji">五</span><div>
+    <h2>版面の整形</h2>
+    <p class="step-note">余白と操作バーを落とし、必要なら見開きを左右に割る。</p>
+  </div></div>
+  <div class="body">
+    <div class="fields">
+      <div class="field"><label for="c-top">上を切る <span class="val" id="v-top">0%</span></label><input type="range" id="c-top" min="0" max="40" value="0"></div>
+      <div class="field"><label for="c-bottom">下を切る <span class="val" id="v-bottom">0%</span></label><input type="range" id="c-bottom" min="0" max="40" value="0"></div>
+      <div class="field"><label for="c-left">左を切る <span class="val" id="v-left">0%</span></label><input type="range" id="c-left" min="0" max="40" value="0"></div>
+      <div class="field"><label for="c-right">右を切る <span class="val" id="v-right">0%</span></label><input type="range" id="c-right" min="0" max="40" value="0"></div>
+      <div class="field"><label for="c-split">見開き</label>
+        <select id="c-split"><option value="0" selected>単ページのまま</option><option value="1">左右に割る</option></select></div>
+      <div class="field"><label for="c-edge">長辺の画素数</label>
+        <select id="c-edge"><option value="1200">1200（軽い）</option><option value="1600" selected>1600（標準）</option><option value="2000">2000（精細）</option></select></div>
+      <div class="field"><label for="c-q">画質 <span class="val" id="v-q">0.78</span></label><input type="range" id="c-q" min="50" max="95" value="78"></div>
+    </div>
+    <div class="row"><button id="btn-auto">余白を自動検出</button><button id="btn-prev">この設定で見本を出す</button></div>
+    <p class="note" id="crop-note">余白は抽出直後に自動で測る。手で動かした後に押し直せば測り直す。</p>
+    <div class="preview" id="prev-box" hidden><img id="prev-img" alt="整形後の見本"></div>
+  </div>
+</section>
+
+<!-- 六 ── 製本 -->
+<section class="step" id="s6" data-locked="true">
+  <div class="step-head"><span class="kanji">六</span><div>
+    <h2>製本と取り出し</h2>
+    <p class="step-note">PDFはこの端末の中で組み立てる。取り出し方は環境で通る順に試す。</p>
+  </div></div>
+  <div class="body">
+    <div class="row"><button class="primary" id="btn-build">PDFを組む</button></div>
+    <div class="bar"><i id="build-bar"></i></div>
+    <p class="note" id="build-msg">未実行。</p>
+    <div class="row">
+      <button class="primary" id="btn-save" disabled>PDFを保存</button>
+      <button id="btn-share" disabled>共有…</button>
+      <button id="btn-imgs" disabled>画像で1枚ずつ保存</button>
+    </div>
+    <p class="note">保存は確認を挟む。PDFが通らない環境（16MiB超・PDF不可）では「画像で1枚ずつ保存」で写真に入れ、純正ショートカット「イメージからPDFを作成」で綴じる。</p>
+    <p class="note" id="env-note" style="font-family:var(--data); font-size:.75rem">保存経路を判定中…</p>
+    <div class="row" id="out-nav" hidden>
+      <button id="btn-prev24">前の24枚</button>
+      <span class="chip idle" id="out-range">-</span>
+      <button id="btn-next24">次の24枚</button>
+    </div>
+    <div class="grid" id="out-grid" hidden></div>
+  </div>
+</section>
+
+<!-- 七 ── 記録 -->
+<section class="step" id="s7" data-locked="true">
+  <div class="step-head"><span class="kanji">七</span><div>
+    <h2>検品記録</h2>
+    <p class="step-note">何をどう作ったかの控え。数え違い・重複・停止理由はここに残る。</p>
+  </div></div>
+  <div class="body">
+    <div class="row"><button id="btn-copy">記録を写す</button></div>
+    <pre class="report" id="report">未生成。</pre>
+  </div>
+</section>
+
+</div>
+
+<footer class="colophon">
+  <div>処理は全てこの画面の中で行う。画像・PDF・記録はどこへも送信しない。</div>
+  <div>OCR（透明テキスト層）はこの画面では作らない。検索可能PDFが要る場合は Mac 側の <span style="font-family:var(--data)">ebook-rebinder-jp</span> へ渡す。</div>
+</footer>
+</div>
+
+<script>
+"use strict";
+
+// 通常のページとして配信されている時だけ、オフラインで開けるようにする。
+if ("serviceWorker" in navigator && location.protocol.indexOf("http") === 0 && !window.claude){
+  addEventListener("load", () => { navigator.serviceWorker.register("./sw.js").catch(() => {}); });
+}
+
+/* ══ 状態 ══════════════════════════════════════════ */
+const S = {
+  gate:false, mode:null, video:null, images:[],
+  pages:[], probe:[], out:[], pdf:null,
+  abort:false, running:false, stopReason:null,
+  startedAt:null,
+};
+const $ = s => document.querySelector(s);
+const $$ = s => Array.from(document.querySelectorAll(s));
+
+/* ══ 画面部品 ══════════════════════════════════════ */
+function chip(el, cls, text){ el.className = "chip " + cls; el.textContent = text; }
+function unlock(id, on){ $(id).dataset.locked = on ? "false" : "true"; }
+function setBar(id, p){ $(id).style.width = Math.max(0, Math.min(100, p * 100)).toFixed(1) + "%"; }
+
+/* ══ 一：確認ゲート ═════════════════════════════════ */
+const gateBoxes = $$("#gate input[data-g]");
+gateBoxes.forEach(b => b.addEventListener("change", () => {
+  $("#btn-gate").disabled = !gateBoxes.every(x => x.checked);
+}));
+$("#btn-gate").addEventListener("click", () => {
+  S.gate = true; S.startedAt = new Date().toISOString();
+  chip($("#st-gate"), "ok", "確認 済");
+  unlock("#s2", true);
+  $("#s2").scrollIntoView({behavior:"smooth", block:"start"});
+});
+
+/* ══ 画像の基本演算 ════════════════════════════════ */
+const HASH_N = 8, STAT_N = 64;
+const statCanvas = document.createElement("canvas");
+statCanvas.width = statCanvas.height = STAT_N;
+const statCtx = statCanvas.getContext("2d", {willReadFrequently:true});
+
+// 64x64 へ縮めて、輝度格子（差分用）・統計（保護判定用）・8x8平均ハッシュ（記録用）を一度に取る。
+// ページの弁別は平均ハッシュではなく輝度格子の平均絶対差で行う。
+// 文字組のページは 8x8 まで潰すと互いに似すぎ、別ページを同一と誤判定するため。
+function analyze(source){
+  statCtx.drawImage(source, 0, 0, STAT_N, STAT_N);
+  const d = statCtx.getImageData(0, 0, STAT_N, STAT_N).data;
+  const grid = new Float32Array(STAT_N * STAT_N);
+  let sum = 0;
+  for (let i = 0; i < grid.length; i++){
+    const o = i * 4;
+    const v = 0.299 * d[o] + 0.587 * d[o+1] + 0.114 * d[o+2];
+    grid[i] = v; sum += v;
+  }
+  const mean = sum / grid.length;
+  let varSum = 0;
+  for (let i = 0; i < grid.length; i++){ const dv = grid[i] - mean; varSum += dv * dv; }
+  const sd = Math.sqrt(varSum / grid.length);
+
+  // 8x8 ブロック平均で平均ハッシュを作る（記録・照合用）
+  const blocks = new Float32Array(HASH_N * HASH_N);
+  const k = STAT_N / HASH_N;
+  for (let by = 0; by < HASH_N; by++){
+    for (let bx = 0; bx < HASH_N; bx++){
+      let t = 0;
+      for (let y = 0; y < k; y++) for (let x = 0; x < k; x++) t += grid[(by*k+y)*STAT_N + (bx*k+x)];
+      blocks[by*HASH_N + bx] = t / (k*k);
+    }
+  }
+  let bs = 0; for (const v of blocks) bs += v;
+  const bavg = bs / blocks.length;
+  const hash = new Uint8Array(HASH_N * HASH_N);
+  for (let i = 0; i < blocks.length; i++) hash[i] = blocks[i] >= bavg ? 1 : 0;
+
+  return {grid, hash, mean, sd, protected: sd < 3.2 && (mean < 20 || mean > 244)};
+}
+// 0〜255 の平均絶対差。同じ画面なら 1 未満、別ページなら数以上になる。
+function diff(a, b){
+  let s = 0;
+  for (let i = 0; i < a.length; i++) s += Math.abs(a[i] - b[i]);
+  return s / a.length;
+}
+function hashHex(h){
+  let out = "";
+  for (let i = 0; i < h.length; i += 4) out += ((h[i]<<3)|(h[i+1]<<2)|(h[i+2]<<1)|h[i+3]).toString(16);
+  return out;
+}
+
+/* ══ 二：素材 ══════════════════════════════════════ */
+$("#in-video").addEventListener("change", e => {
+  const f = e.target.files[0]; if (!f) return;
+  S.mode = "video"; S.video = f; S.images = []; resetFrom(3);
+  chip($("#st-src"), "ok", "収録 " + (f.size/1048576).toFixed(0) + "MB");
+  $("#src-info").textContent = "画面収録「" + f.name + "」を読み込んだ。試験抽出へ進む。";
+  unlock("#s3", true);
+});
+$("#in-images").addEventListener("change", e => {
+  const fs = Array.from(e.target.files || []);
+  if (!fs.length) return;
+  fs.sort((a,b) => a.name.localeCompare(b.name, "ja", {numeric:true}));
+  S.mode = "images"; S.images = fs; S.video = null; resetFrom(3);
+  chip($("#st-src"), "ok", "画像 " + fs.length + "枚");
+  $("#src-info").textContent = fs.length + "枚をファイル名順に読み込んだ。試験抽出へ進む。";
+  unlock("#s3", true);
+});
+
+function resetFrom(step){
+  if (step <= 3){ S.probe = []; $("#probe-grid").hidden = true; $("#probe-grid").innerHTML = "";
+    $("#probe-msg").textContent = "未実行。"; $("#btn-approve").disabled = true; setBar("#probe-bar", 0); }
+  if (step <= 4){ S.pages = []; $("#page-grid").hidden = true; $("#page-grid").innerHTML = "";
+    $("#run-msg").textContent = "未実行。"; setBar("#run-bar", 0); chip($("#st-pages"), "idle", "ページ 0"); }
+  if (step <= 6){ S.out = []; S.pdf = null; imgPage = 0;
+    $("#out-grid").hidden = true; $("#out-grid").innerHTML = ""; $("#out-nav").hidden = true;
+    $("#build-msg").textContent = "未実行。"; setBar("#build-bar", 0);
+    ["#btn-save","#btn-share","#btn-imgs"].forEach(x => $(x).disabled = true); }
+  S.stopReason = null;
+  for (const s of [4,5,6,7]) if (step <= s) unlock("#s" + s, false);
+}
+
+/* ══ 走査の中核 ════════════════════════════════════ */
+// 収録動画を再生しながら、静止した区間の「末尾フレーム」をページとして拾う。
+async function scanVideo(file, opts, onPage, onProgress){
+  const video = document.createElement("video");
+  video.muted = true; video.playsInline = true; video.preload = "auto";
+  video.src = URL.createObjectURL(file);
+  await new Promise((res, rej) => {
+    video.onloadedmetadata = res;
+    video.onerror = () => rej(new Error("この動画を読めない（形式がSafariで扱えない可能性）"));
+  });
+  const W = video.videoWidth, H = video.videoHeight;
+  if (!W || !H) throw new Error("動画の寸法を取れない");
+
+  // 長さが不明な収録（duration が Infinity）は、末尾へ一度飛ばして実長を確定させる。
+  // これをしないと再生が途中で ended になり、最後のページを落とす。
+  const seekTo = pos => new Promise(res => {
+    const f = () => { video.removeEventListener("seeked", f); res(); };
+    video.addEventListener("seeked", f);
+    video.currentTime = pos;
+  });
+  let dur = video.duration;
+  if (!isFinite(dur) || dur <= 0){
+    await seekTo(1e6);
+    dur = video.duration;
+    await seekTo(0);
+  }
+
+  const scale = Math.min(1, opts.captureEdge / Math.max(W, H));
+  const full = document.createElement("canvas");
+  full.width = Math.round(W * scale); full.height = Math.round(H * scale);
+  const fctx = full.getContext("2d");
+
+  const pend = document.createElement("canvas");
+  pend.width = full.width; pend.height = full.height;
+  const pctx = pend.getContext("2d");
+
+  let last = null, lastT = 0, runStart = null, pendT = 0, pendInfo = null;
+  let protRun = 0, count = 0, stopped = null, samples = 0;
+  const diffs = [];
+  // 復号が追いつかないと標本が疎になりページを飛ばす。密度を測って倍率を自動で落とす。
+  const need = 3 / opts.minHold;   // 映像1秒あたり最低限の標本数
+  let rateNow = opts.rate, winT = 0, winSamples = 0, rateFloor = false;
+  video.playbackRate = rateNow;
+
+  // 提示されない <video> は復号・フレーム更新が止まるため、必ず画面へ置く。
+  const host = document.getElementById("scan-view");
+  if (host){ host.innerHTML = ""; host.appendChild(video); host.hidden = false; }
+  await video.play();
+
+  // 控えは await の前に取り切る。末尾で ended と step の両方から呼ばれるため、
+  // 掴んだまま待つと二重に走って最後の1ページを落とす。
+  const flush = async () => {
+    const p = pendInfo;
+    if (!p) return false;
+    pendInfo = null;
+    const t = pendT;
+    const blob = await new Promise(r => pend.toBlob(r, "image/jpeg", 0.9));
+    p.blob = blob; p.t = t; p.w = pend.width; p.h = pend.height;
+    const tc = document.createElement("canvas");
+    const sc = 220 / Math.max(pend.width, pend.height);
+    tc.width = Math.max(1, Math.round(pend.width * sc));
+    tc.height = Math.max(1, Math.round(pend.height * sc));
+    tc.getContext("2d").drawImage(pend, 0, 0, tc.width, tc.height);
+    p.thumb = tc.toDataURL("image/jpeg", 0.6);
+    count++;
+    await onPage(p);
+    return true;
+  };
+
+  // 書き出しは1本の鎖に通す。step と ended から同時に呼ばれても順に走り、
+  // 終了は在庫を吐き切ってから返す（最後のページが集計に間に合わなくなるため）。
+  let inflight = Promise.resolve(false);
+  const flushOnce = () => (inflight = inflight.then(() => flush()));
+
+  await new Promise(resolve => {
+    let done = false;
+    const finish = async (reason) => {
+      if (done) return;
+      done = true; stopped = reason;
+      try { video.pause(); } catch(e){}
+      try { await inflight; } catch(e){}
+      resolve();
+    };
+
+    const step = async () => {
+      if (done) return;
+      if (S.abort) return finish("abort");
+      if (video.ended) { await flushOnce(); return finish("end"); }
+
+      const t = video.currentTime;
+      const info = analyze(video);
+      samples++; winSamples++;
+      if (t - winT >= 0.6){
+        const dens = winSamples / (t - winT);
+        if (dens < need && rateNow > 0.5){
+          rateNow = Math.max(0.5, rateNow / 2); video.playbackRate = rateNow;
+          if (rateNow === 0.5) rateFloor = true;
+        } else if (dens > need * 3 && rateNow < opts.rate){
+          rateNow = Math.min(opts.rate, rateNow * 1.5); video.playbackRate = rateNow;
+        }
+        winT = t; winSamples = 0;
+      }
+
+      if (info.protected){
+        protRun++;
+        if (protRun >= 8) return finish("protected");
+      } else protRun = 0;
+
+      const md = last ? diff(last.grid, info.grid) : Infinity;
+      if (last && md <= opts.threshold){
+        if (runStart === null) runStart = lastT;
+        // 規定時間を超えて静止していれば、最新フレームで控えを上書きし続ける
+        if (t - runStart >= opts.minHold){
+          pctx.drawImage(video, 0, 0, pend.width, pend.height);
+          pendT = t;
+          pendInfo = {hash:info.hash, grid:info.grid, mean:info.mean, sd:info.sd, protected:info.protected};
+        }
+      } else {
+        if (pendInfo){
+          try { video.pause(); } catch(e){}          // 書き出しの間に映像を進ませない
+          const got = await flushOnce();
+          if (done) return;
+          if (!video.ended){ try { await video.play(); } catch(e){} }
+          if (got && count >= opts.maxPages) return finish("maxpages");
+        }
+        runStart = null;
+      }
+      if (last) diffs.push(md);
+      last = info; lastT = t;
+      if (onProgress) onProgress(dur && isFinite(dur) ? t / dur : 0, count, rateNow);
+      requestAnimationFrame(() => step());
+    };
+    video.addEventListener("ended", async () => { await flushOnce(); finish("end"); });
+    requestAnimationFrame(() => step());
+  });
+
+  if (host){ host.hidden = true; host.innerHTML = ""; }
+  URL.revokeObjectURL(video.src);
+  diffs.sort((a,b) => a - b);
+  const q = f => diffs.length ? diffs[Math.min(diffs.length-1, Math.floor(diffs.length*f))] : 0;
+  const covered = Math.max(0.001, lastT);
+  return {stopped, scanned: count, width: full.width, height: full.height, duration: dur,
+          diffStats: {p50: q(0.5), p90: q(0.9), p99: q(0.99), n: diffs.length,
+                      perSec: samples / covered, rateFinal: rateNow, rateFloor}};
+}
+
+// スクリーンショット群：1枚1ページ。連続重複だけ印を付ける。
+async function scanImages(files, opts, onPage, onProgress){
+  let last = null, count = 0;
+  for (let i = 0; i < files.length; i++){
+    if (S.abort) return {stopped:"abort", scanned:count};
+    if (count >= opts.maxPages) return {stopped:"maxpages", scanned:count};
+    let bmp;
+    try { bmp = await createImageBitmap(files[i]); }
+    catch(e){ continue; }
+    const scale = Math.min(1, opts.captureEdge / Math.max(bmp.width, bmp.height));
+    const c = document.createElement("canvas");
+    c.width = Math.round(bmp.width * scale); c.height = Math.round(bmp.height * scale);
+    c.getContext("2d").drawImage(bmp, 0, 0, c.width, c.height);
+    const info = analyze(c);
+    const blob = await new Promise(r => c.toBlob(r, "image/jpeg", 0.9));
+    const p = {hash:info.hash, grid:info.grid, mean:info.mean, sd:info.sd, protected:info.protected,
+               blob, t:i, w:c.width, h:c.height, name:files[i].name};
+    if (last && diff(last, info.grid) <= opts.threshold) p.dup = true;
+    last = info.grid;
+    bmp.close && bmp.close();
+    count++;
+    await onPage(p);
+    if (onProgress) onProgress((i+1)/files.length, count);
+  }
+  return {stopped:"end", scanned:count};
+}
+
+function readOpts(){
+  return {
+    rate: parseFloat($("#f-rate").value),
+    minHold: Math.max(0.1, parseFloat($("#f-stable").value) || 0.5),
+    threshold: Math.max(0.2, parseFloat($("#f-thr").value) || 2.5),
+    maxPages: Math.max(1, Math.min(2000, parseInt($("#f-max").value, 10) || 300)),
+    captureEdge: 2000,
+  };
+}
+
+async function thumbOf(blob, edge){
+  const bmp = await createImageBitmap(blob);
+  const s = Math.min(1, edge / Math.max(bmp.width, bmp.height));
+  const c = document.createElement("canvas");
+  c.width = Math.round(bmp.width * s); c.height = Math.round(bmp.height * s);
+  c.getContext("2d").drawImage(bmp, 0, 0, c.width, c.height);
+  bmp.close && bmp.close();
+  return c.toDataURL("image/jpeg", 0.6);
+}
+
+/* ══ 三：試験抽出 ══════════════════════════════════ */
+$("#btn-probe-clear").addEventListener("click", () => resetFrom(3));
+$("#btn-probe").addEventListener("click", async () => {
+  if (S.running) return;
+  resetFrom(3);
+  S.running = true; S.abort = false;
+  chip($("#st-job"), "run", "試験中");
+  $("#probe-msg").textContent = "走査している。画面を消さないこと。";
+  const opts = Object.assign(readOpts(), {maxPages: 3});
+  const grid = $("#probe-grid"); grid.hidden = false;
+  try {
+    const onPage = async p => {
+      S.probe.push(p);
+      const t = p.thumb || await thumbOf(p.blob, 260);
+      grid.insertAdjacentHTML("beforeend", pageCard(S.probe.length, t, p, false));
+    };
+    const r = S.mode === "video"
+      ? await scanVideo(S.video, opts, onPage, pr => setBar("#probe-bar", pr))
+      : await scanImages(S.images.slice(0, 3), opts, onPage, pr => setBar("#probe-bar", pr));
+    setBar("#probe-bar", 1);
+    finishProbe(r);
+  } catch(err){
+    chip($("#st-job"), "stop", "失敗");
+    $("#probe-msg").textContent = "停止：" + err.message;
+    S.stopReason = "error:" + err.message;
+  }
+  S.running = false;
+});
+
+function advice(r){
+  const d = r.diffStats;
+  if (!d || !d.n) return "";
+  const o = readOpts();
+  let msg = "　観測した差：静止側 " + d.p50.toFixed(2) + "／動き側 " + d.p99.toFixed(2) +
+            "（閾値 " + o.threshold + "）。";
+  if (d.perSec){
+    msg += "走査密度 " + d.perSec.toFixed(1) + "回/映像秒。";
+    if (d.rateFinal && d.rateFinal < o.rate) msg += "倍率は" + d.rateFinal.toFixed(1) + "倍まで自動で落とした。";
+    if (d.rateFloor && d.perSec * o.minHold < 3) msg += "最低倍率でも密度が足りない。各ページをもっと長く静止させて撮り直す。";
+  }
+  return msg;
+}
+function finishProbe(r){
+  const prot = S.probe.filter(p => p.protected).length;
+  if (r.stopped === "protected" || (S.probe.length && prot === S.probe.length)){
+    chip($("#st-job"), "stop", "保護検出");
+    $("#probe-msg").innerHTML = "<span style='color:var(--shu)'>停止：黒・白・一様な画面（保護表示）を検出した。回避はしない。この本はこの経路では扱えない。</span>";
+    S.stopReason = "E_CAPTURE_PROTECTED";
+    $("#btn-approve").disabled = true;
+    return;
+  }
+  if (!S.probe.length){
+    chip($("#st-job"), "warn", "0ページ");
+    $("#probe-msg").textContent = "ページを1枚も拾えなかった。閾値を上げる（静止側の値より少し大きく）か、「静止と見なす時間」を短くする。" + advice(r);
+    $("#btn-approve").disabled = true;
+    return;
+  }
+  chip($("#st-job"), "ok", "試験 済");
+  $("#probe-msg").textContent = S.probe.length + "ページを拾った。中身・向き・切れ方を見て、良ければ承認する。" + advice(r);
+  $("#btn-approve").disabled = false;
+}
+$("#btn-approve").addEventListener("click", () => {
+  unlock("#s4", true);
+  $("#s4").scrollIntoView({behavior:"smooth", block:"start"});
+});
+
+function pageCard(n, thumb, p, interactive){
+  const flags = p.protected ? '<span class="flag prot">保護</span>' : (p.dup ? '<span class="flag dup">重複</span>' : "");
+  const tag = interactive ? "button" : "div";
+  const attrs = interactive ? ' class="pg" aria-pressed="false" data-i="' + (n-1) + '"' : ' class="pg"';
+  return "<" + tag + attrs + '><img src="' + thumb + '" alt="' + n + 'ページ目"><span class="n">' + n + "</span>" + flags + "</" + tag + ">";
+}
+
+/* ══ 四：本抽出 ════════════════════════════════════ */
+$("#btn-abort").addEventListener("click", () => { S.abort = true; });
+$("#btn-run").addEventListener("click", async () => {
+  if (S.running) return;
+  resetFrom(4);
+  S.running = true; S.abort = false;
+  $("#btn-abort").disabled = false; $("#btn-run").disabled = true;
+  chip($("#st-job"), "run", "抽出中");
+  $("#run-msg").textContent = "走査している。画面を消さないこと（iPadOSが処理を止める）。";
+  const opts = readOpts();
+  const grid = $("#page-grid"); grid.hidden = false;
+  try {
+    const onPage = async p => {
+      const prev = S.pages[S.pages.length - 1];
+      if (prev && prev.grid && diff(prev.grid, p.grid) <= opts.threshold) p.dup = true;
+      p.excluded = !!p.protected; // 保護候補は既定で外す（回避はしない・入れない）
+      S.pages.push(p);
+      const t = p.thumb || await thumbOf(p.blob, 220);
+      p.thumb = t;
+      grid.insertAdjacentHTML("beforeend", pageCard(S.pages.length, t, p, true));
+      if (p.excluded){
+        const el = grid.lastElementChild;
+        if (el && el.setAttribute) el.setAttribute("aria-pressed", "true");
+      }
+      chip($("#st-pages"), "ok", "ページ " + S.pages.filter(x => !x.excluded).length);
+    };
+    const r = S.mode === "video"
+      ? await scanVideo(S.video, opts, onPage, (pr, n, rate) => {
+          setBar("#run-bar", pr);
+          $("#run-msg").textContent = "走査中… " + n + "ページ／倍率 " + (rate||opts.rate).toFixed(1) + "倍。画面を消さないこと。";
+        })
+      : await scanImages(S.images, opts, onPage, pr => setBar("#run-bar", pr));
+    setBar("#run-bar", 1);
+    await finishRun(r, opts);
+  } catch(err){
+    chip($("#st-job"), "stop", "失敗");
+    $("#run-msg").textContent = "停止：" + err.message;
+    S.stopReason = "error:" + err.message;
+  }
+  S.running = false;
+  $("#btn-abort").disabled = true; $("#btn-run").disabled = false;
+});
+
+async function finishRun(r, opts){
+  const prot = S.pages.filter(p => p.protected).length;
+  const dup = S.pages.filter(p => p.dup).length;
+  if (r.stopped === "protected"){
+    chip($("#st-job"), "stop", "保護検出");
+    $("#run-msg").innerHTML = "<span style='color:var(--shu)'>停止：保護表示を検出した。回避はしない。ここまでの" + S.pages.length + "ページのみ残る。</span>";
+    S.stopReason = "E_CAPTURE_PROTECTED";
+  } else if (r.stopped === "abort"){
+    chip($("#st-job"), "warn", "中止");
+    $("#run-msg").textContent = "手動で中止した。ここまで" + S.pages.length + "ページ。";
+    S.stopReason = "aborted";
+  } else if (r.stopped === "maxpages"){
+    chip($("#st-job"), "warn", "上限到達");
+    $("#run-msg").textContent = "上限（" + opts.maxPages + "ページ）に達して止めた。続きは別ジョブにする。";
+    S.stopReason = "maxpages";
+  } else if (prot && prot === S.pages.length){
+    chip($("#st-job"), "stop", "保護検出");
+    $("#run-msg").innerHTML = "<span style='color:var(--shu)'>停止：全ページが黒・白・一様（保護表示）だった。回避はしない。この本はこの経路では扱えない。</span>";
+    S.stopReason = "E_CAPTURE_PROTECTED";
+  } else {
+    chip($("#st-job"), prot ? "warn" : "ok", prot ? "保護を除外" : "抽出 済");
+    $("#run-msg").textContent = S.pages.length + "ページを抽出（重複候補 " + dup +
+      " / 保護候補 " + prot + (prot ? "＝自動で除外した" : "") + "）。" + advice(r);
+  }
+  if (S.pages.length){
+    unlock("#s5", true); unlock("#s6", true); unlock("#s7", true);
+    await autoCrop();
+    writeReport();
+  }
+}
+
+$("#page-grid").addEventListener("click", e => {
+  const b = e.target.closest("button.pg"); if (!b) return;
+  const i = parseInt(b.dataset.i, 10);
+  const on = b.getAttribute("aria-pressed") === "true";
+  b.setAttribute("aria-pressed", on ? "false" : "true");
+  S.pages[i].excluded = !on;
+  const keep = S.pages.filter(p => !p.excluded).length;
+  chip($("#st-pages"), "ok", "ページ " + keep);
+});
+
+/* ══ 五：整形 ══════════════════════════════════════ */
+const cropIds = ["top","bottom","left","right"];
+cropIds.forEach(k => $("#c-" + k).addEventListener("input", () => { $("#v-" + k).textContent = $("#c-" + k).value + "%"; }));
+$("#c-q").addEventListener("input", () => { $("#v-q").textContent = (parseInt($("#c-q").value,10)/100).toFixed(2); });
+
+function cropVals(){
+  const v = {};
+  cropIds.forEach(k => v[k] = parseInt($("#c-" + k).value, 10) / 100);
+  return v;
+}
+function setCrop(v){
+  cropIds.forEach(k => { $("#c-" + k).value = Math.round(v[k] * 100); $("#v-" + k).textContent = Math.round(v[k]*100) + "%"; });
+}
+
+// 数ページの内容外接矩形の和から余白を推定する
+async function autoCrop(){
+  const kept = S.pages.filter(p => !p.excluded && !p.protected);
+  const note = $("#crop-note");
+  if (!kept.length){ if (note) note.textContent = "測れるページが無い。"; return; }
+  if (note) note.textContent = "余白を測っている…";
+  const picks = [];
+  const step = Math.max(1, Math.floor(kept.length / 5));
+  for (let i = 0; i < kept.length && picks.length < 5; i += step) picks.push(kept[i]);
+  const N = 120;
+  const c = document.createElement("canvas"); c.width = c.height = N;
+  const ctx = c.getContext("2d", {willReadFrequently:true});
+  let top = 1, bottom = 1, left = 1, right = 1;
+  for (const p of picks){
+    const bmp = await createImageBitmap(p.blob);
+    ctx.clearRect(0,0,N,N);
+    ctx.drawImage(bmp, 0, 0, N, N);
+    bmp.close && bmp.close();
+    const d = ctx.getImageData(0,0,N,N).data;
+    const lum = (x,y) => { const o = (y*N+x)*4; return 0.299*d[o]+0.587*d[o+1]+0.114*d[o+2]; };
+    const border = [];
+    for (let x = 0; x < N; x++){ border.push(lum(x,0)); border.push(lum(x,N-1)); }
+    border.sort((a,b)=>a-b);
+    const bg = border[Math.floor(border.length/2)];
+    const hit = (x,y) => Math.abs(lum(x,y) - bg) > 22;
+    let t = 0, b = N-1, l = 0, r = N-1;
+    outerT: for (; t < N; t++) for (let x = 0; x < N; x++) if (hit(x,t)) break outerT;
+    outerB: for (; b > t; b--) for (let x = 0; x < N; x++) if (hit(x,b)) break outerB;
+    outerL: for (; l < N; l++) for (let y = t; y <= b; y++) if (hit(l,y)) break outerL;
+    outerR: for (; r > l; r--) for (let y = t; y <= b; y++) if (hit(r,y)) break outerR;
+    if (t >= N - 1) continue; // 内容の無い面は推定に使わない
+    top = Math.min(top, t/N); bottom = Math.min(bottom, (N-1-b)/N);
+    left = Math.min(left, l/N); right = Math.min(right, (N-1-r)/N);
+  }
+  const pad = 0.008, cap = 0.35;
+  if (note) note.textContent = "先頭 " + picks.length + "ページの本文域から測った。合わなければスライダで直す。";
+  setCrop({
+    top: Math.min(cap, Math.max(0, top - pad)),
+    bottom: Math.min(cap, Math.max(0, bottom - pad)),
+    left: Math.min(cap, Math.max(0, left - pad)),
+    right: Math.min(cap, Math.max(0, right - pad)),
+  });
+}
+$("#btn-auto").addEventListener("click", () => autoCrop());
+
+// 1ページを整形して JPEG 化する（見開き指定なら2枚返す）
+async function renderPage(p){
+  const bmp = await createImageBitmap(p.blob);
+  const v = cropVals();
+  const sx = Math.round(bmp.width * v.left);
+  const sy = Math.round(bmp.height * v.top);
+  const sw = Math.max(8, Math.round(bmp.width * (1 - v.left - v.right)));
+  const sh = Math.max(8, Math.round(bmp.height * (1 - v.top - v.bottom)));
+  const split = $("#c-split").value === "1";
+  const edge = parseInt($("#c-edge").value, 10);
+  const q = parseInt($("#c-q").value, 10) / 100;
+  const parts = split
+    ? ($("#f-dir").value === "rtl"
+        ? [[sx + Math.floor(sw/2), sy, sw - Math.floor(sw/2), sh], [sx, sy, Math.floor(sw/2), sh]]
+        : [[sx, sy, Math.floor(sw/2), sh], [sx + Math.floor(sw/2), sy, sw - Math.floor(sw/2), sh]])
+    : [[sx, sy, sw, sh]];
+  const out = [];
+  for (const [ax, ay, aw, ah] of parts){
+    const s = Math.min(1, edge / Math.max(aw, ah));
+    const c = document.createElement("canvas");
+    c.width = Math.max(1, Math.round(aw * s)); c.height = Math.max(1, Math.round(ah * s));
+    const ctx = c.getContext("2d");
+    ctx.fillStyle = "#ffffff"; ctx.fillRect(0, 0, c.width, c.height);
+    ctx.drawImage(bmp, ax, ay, aw, ah, 0, 0, c.width, c.height);
+    const blob = await new Promise(r => c.toBlob(r, "image/jpeg", q));
+    out.push({blob, w:c.width, h:c.height});
+  }
+  bmp.close && bmp.close();
+  return out;
+}
+
+$("#btn-prev").addEventListener("click", async () => {
+  const kept = S.pages.filter(p => !p.excluded);
+  if (!kept.length) return;
+  const parts = await renderPage(kept[Math.floor(kept.length/2)] || kept[0]);
+  $("#prev-img").src = URL.createObjectURL(parts[0].blob);
+  $("#prev-box").hidden = false;
+});
+
+/* ══ 六：PDF 生成 ══════════════════════════════════ */
+function pdfHexText(s){
+  let hex = "FEFF";
+  for (const ch of s){
+    const cp = ch.codePointAt(0);
+    if (cp > 0xFFFF){
+      const v = cp - 0x10000;
+      hex += (0xD800 + (v >> 10)).toString(16).padStart(4,"0").toUpperCase();
+      hex += (0xDC00 + (v & 0x3FF)).toString(16).padStart(4,"0").toUpperCase();
+    } else hex += cp.toString(16).padStart(4,"0").toUpperCase();
+  }
+  return "<" + hex + ">";
+}
+
+async function buildPdf(items, meta, onProgress){
+  const enc = new TextEncoder();
+  const chunks = []; let len = 0;
+  const push = u8 => { chunks.push(u8); len += u8.length; };
+  const put = s => push(enc.encode(s));
+  const offsets = [0];
+  const obj = (n, body) => { offsets[n] = len; put(n + " 0 obj\n" + body + "\nendobj\n"); };
+
+  put("%PDF-1.4\n");
+  const total = 3 + items.length * 3;
+  const kids = items.map((_, i) => (3 + i*3) + " 0 R").join(" ");
+  obj(1, "<< /Type /Catalog /Pages 2 0 R >>");
+  obj(2, "<< /Type /Pages /Kids [" + kids + "] /Count " + items.length + " >>");
+
+  const DPI = 150;
+  for (let i = 0; i < items.length; i++){
+    const it = items[i];
+    const pn = 3 + i*3, imgN = pn + 1, cN = pn + 2;
+    const wpt = (it.w * 72 / DPI), hpt = (it.h * 72 / DPI);
+    obj(pn, "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 " + wpt.toFixed(2) + " " + hpt.toFixed(2) + "] " +
+            "/Resources << /XObject << /Im0 " + imgN + " 0 R >> >> /Contents " + cN + " 0 R >>");
+
+    const bytes = new Uint8Array(await it.blob.arrayBuffer());
+    offsets[imgN] = len;
+    put(imgN + " 0 obj\n<< /Type /XObject /Subtype /Image /Width " + it.w + " /Height " + it.h +
+        " /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length " + bytes.length + " >>\nstream\n");
+    push(bytes);
+    put("\nendstream\nendobj\n");
+
+    const cs = "q\n" + wpt.toFixed(2) + " 0 0 " + hpt.toFixed(2) + " 0 0 cm\n/Im0 Do\nQ\n";
+    obj(cN, "<< /Length " + cs.length + " >>\nstream\n" + cs + "endstream");
+    if (onProgress) onProgress((i + 1) / items.length);
+    if (i % 5 === 0) await new Promise(r => setTimeout(r, 0));
+  }
+
+  const infoN = total;
+  obj(infoN, "<< /Title " + pdfHexText(meta.title) + " /Producer " + pdfHexText("私家版リバインダー（個人読書用）") +
+             " /Creator " + pdfHexText("shikaban-rebinder") + " >>");
+
+  const xrefPos = len;
+  let xref = "xref\n0 " + (total + 1) + "\n0000000000 65535 f \n";
+  for (let n = 1; n <= total; n++) xref += String(offsets[n] || 0).padStart(10, "0") + " 00000 n \n";
+  put(xref);
+  put("trailer\n<< /Size " + (total + 1) + " /Root 1 0 R /Info " + infoN + " 0 R >>\nstartxref\n" + xrefPos + "\n%%EOF\n");
+
+  const all = new Uint8Array(len);
+  let o = 0; for (const c of chunks){ all.set(c, o); o += c.length; }
+  return new Blob([all], {type:"application/pdf"});
+}
+
+$("#btn-build").addEventListener("click", async () => {
+  const kept = S.pages.filter(p => !p.excluded);
+  if (!kept.length){ $("#build-msg").textContent = "残っているページが無い。"; return; }
+  chip($("#st-job"), "run", "製本中");
+  $("#build-msg").textContent = "版面を整形している…";
+  S.out = [];
+  const outGrid = $("#out-grid"); outGrid.innerHTML = ""; outGrid.hidden = false;
+  for (let i = 0; i < kept.length; i++){
+    const parts = await renderPage(kept[i]);
+    for (const part of parts) S.out.push(part);
+    setBar("#build-bar", (i + 1) / kept.length * 0.7);
+  }
+  $("#build-msg").textContent = S.out.length + "ページをPDFへ綴じている…";
+  S.pdf = await buildPdf(S.out, {title: $("#f-title").value || "無題"}, pr => setBar("#build-bar", 0.7 + pr * 0.3));
+  setBar("#build-bar", 1);
+  chip($("#st-job"), "ok", "製本 済");
+  $("#build-msg").textContent = "完成：" + S.out.length + "ページ / " + (S.pdf.size/1048576).toFixed(1) + "MB。取り出し方を選ぶ。";
+  ["#btn-save","#btn-share","#btn-imgs"].forEach(x => $(x).disabled = false);
+  writeReport();
+});
+
+function fileName(ext){
+  const t = ($("#f-title").value || "無題").replace(/[\/\\:*?"<>|]/g, "_").slice(0, 60);
+  return t + (ext || ".pdf");
+}
+function bmsg(t){ $("#build-msg").textContent = t; }
+
+// 閲覧環境が保存を許すか。null なら許していない（従来経路へ落とす）。
+let _dl = null, _dlTried = false, _dlHow = "未判定";
+async function downloads(){
+  if (_dlTried) return _dl;
+  _dlTried = true;
+  const c = window.claude;
+  if (!c){ _dlHow = "window.claude が無い"; return (_dl = null); }
+  if (typeof c.use === "function"){
+    try {
+      const ns = await c.use("downloads");
+      if (ns && typeof ns.save === "function"){ _dlHow = 'claude.use("downloads")'; return (_dl = ns); }
+      _dlHow = 'claude.use("downloads") が null';
+    } catch(e){ _dlHow = "claude.use が例外: " + (e && e.message); }
+  } else _dlHow = "claude.use が無い（旧ランタイム）";
+  // 旧い版では名前空間へ直に触れる場合がある
+  if (c.downloads && typeof c.downloads.save === "function"){ _dlHow = "claude.downloads（直参照）"; return (_dl = c.downloads); }
+  return (_dl = null);
+}
+
+// この閲覧環境で何が使えるかを正直に出す。使えない経路を押させないため。
+async function envProbe(){
+  const el = $("#env-note"); if (!el) return;
+  const hosted = !window.claude;            // claude.ai の外＝普通のWebページ
+  const dl = await downloads();
+  const share = !!(navigator.canShare && navigator.share);
+  const parts = [];
+  if (dl) parts.push("保存: 使える（" + _dlHow + "）");
+  else if (hosted) parts.push("保存: ブラウザの保存を使う（通常のページとして開いている）");
+  else parts.push("保存: 使えない（" + _dlHow + "）");
+  parts.push(share ? "共有: 使える" : "共有: 使えない");
+  if (!dl && !hosted && !share) parts.push("→「画像で1枚ずつ保存」の一覧を長押しして「\"写真\"に追加」する経路のみ");
+  el.textContent = parts.join(" / ");
+}
+if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", envProbe);
+else envProbe();
+function saveErrorText(code){
+  switch(code){
+    case "declined": return "保存を取り消した。";
+    case "too_large": return "16MiBを超えた。画質か長辺を下げるか、章ごとに分けて作り直す。";
+    case "extension_not_enabled":
+    case "rejected_extension": return "この環境はPDFの保存を許していない。「画像で1枚ずつ保存」で写真へ入れ、純正ショートカット「イメージからPDFを作成」で綴じる。";
+    case "rate_limited": return "保存の確認が重なっている。少し待ってもう一度押す。";
+    default: return null; // 従来経路を試す
+  }
+}
+async function legacySave(){
+  const f = new File([S.pdf], fileName(), {type:"application/pdf"});
+  if (navigator.canShare && navigator.canShare({files:[f]})){
+    try { await navigator.share({files:[f], title: $("#f-title").value}); bmsg("共有シートへ渡した。「\"ファイル\"に保存」で iPad 内へ置く。"); return; }
+    catch(e){ if (e.name === "AbortError") return; }
+  }
+  const url = URL.createObjectURL(S.pdf);
+  const a = document.createElement("a");
+  a.href = url; a.download = fileName(); document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 30000);
+  bmsg("保存を要求した。反応が無ければこの環境が保存を止めている（README §4）。");
+}
+
+$("#btn-save").addEventListener("click", async () => {
+  if (!S.pdf) return;
+  const dl = await downloads();
+  if (dl){
+    bmsg("保存の確認を出した。");
+    try { await dl.save({filename: fileName(), data: S.pdf}); bmsg("保存した：" + fileName()); return; }
+    catch(e){
+      const t = saveErrorText(e && e.code);
+      if (t){ bmsg(t); return; }
+    }
+  }
+  await legacySave();
+});
+$("#btn-share").addEventListener("click", async () => { if (S.pdf) await legacySave(); });
+
+function blobToDataURL(b){
+  return new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onload = () => res(r.result); r.onerror = () => rej(new Error("画像を読めない"));
+    r.readAsDataURL(b);
+  });
+}
+// 長押し保存用の一覧。blob: は環境によって保存できないため data: で描く。
+// 全ページ分を一度に描くと落ちるので24枚ずつ。
+const PER = 24;
+let imgPage = 0;
+async function renderSaveGrid(){
+  const g = $("#out-grid");
+  const start = imgPage * PER, end = Math.min(S.out.length, start + PER);
+  g.innerHTML = ""; g.hidden = false; $("#out-nav").hidden = S.out.length <= PER;
+  $("#out-range").textContent = (start + 1) + "–" + end + " / " + S.out.length;
+  $("#btn-prev24").disabled = imgPage === 0;
+  $("#btn-next24").disabled = end >= S.out.length;
+  for (let i = start; i < end; i++){
+    const u = await blobToDataURL(S.out[i].blob);
+    g.insertAdjacentHTML("beforeend",
+      '<div class="pg"><img src="' + u + '" alt="' + (i+1) + 'ページ目"><span class="n">' + (i+1) + "</span></div>");
+  }
+}
+$("#btn-prev24").addEventListener("click", () => { if (imgPage > 0){ imgPage--; renderSaveGrid(); } });
+$("#btn-next24").addEventListener("click", () => { if ((imgPage+1)*PER < S.out.length){ imgPage++; renderSaveGrid(); } });
+
+$("#btn-imgs").addEventListener("click", async () => {
+  if (!S.out.length) return;
+  const dl = await downloads();
+  const base = fileName("");
+  if (dl){
+    for (let i = 0; i < S.out.length; i++){
+      bmsg("画像を保存中… " + (i+1) + "/" + S.out.length);
+      try { await dl.save({filename: base + "-" + String(i+1).padStart(3,"0") + ".jpg", data: S.out[i].blob}); }
+      catch(e){
+        const c = e && e.code;
+        if (c === "declined"){ bmsg("保存を中断した（" + i + "枚まで）。"); break; }
+        if (c === "rate_limited"){ await new Promise(r => setTimeout(r, 1500)); i--; continue; }
+        bmsg(saveErrorText(c) || "画像の保存も通らなかった。下の一覧を長押しして「\"写真\"に追加」する。");
+        break;
+      }
+    }
+  } else {
+    bmsg("下の一覧を長押し →「\"写真\"に追加」で iPad に入る。純正ショートカット「イメージからPDFを作成」で綴じ直せる。");
+  }
+  imgPage = 0;
+  await renderSaveGrid();
+});
+
+/* ══ 七：記録 ══════════════════════════════════════ */
+function writeReport(){
+  const kept = S.pages.filter(p => !p.excluded);
+  const rep = {
+    tool: "shikaban-rebinder",
+    started_at: S.startedAt,
+    finished_at: new Date().toISOString(),
+    attestation: {
+      purchased_or_authorized_by_user: true,
+      opened_by_user_in_official_viewer: true,
+      private_reading_only: true,
+      no_distribution: true, no_sale: true, no_publication: true, no_cloud_upload: true,
+      service_terms_checked_by_user: true,
+      technical_protection_bypass_requested: false,
+      technical_protection_bypass_performed: false,
+    },
+    source: {mode: S.mode, name: S.mode === "video" ? S.video.name : (S.images.length + " images")},
+    settings: Object.assign(readOpts(), {
+      crop: cropVals(), split: $("#c-split").value === "1",
+      direction: $("#f-dir").value, out_edge: parseInt($("#c-edge").value,10),
+      quality: parseInt($("#c-q").value,10)/100,
+    }),
+    counts: {
+      extracted: S.pages.length, kept: kept.length, excluded: S.pages.length - kept.length,
+      duplicate_candidates: S.pages.filter(p => p.dup).length,
+      protected_candidates: S.pages.filter(p => p.protected).length,
+      pdf_pages: S.out.length,
+      pdf_bytes: S.pdf ? S.pdf.size : 0,
+    },
+    stop_reason: S.stopReason,
+    warnings: [
+      S.pages.some(p => p.dup) ? "重複候補あり：同じページが二重に入っていないか目視する" : null,
+      S.stopReason === "maxpages" ? "上限で打ち切った：続きは別ジョブ" : null,
+      S.out.length && S.out.length !== kept.length && $("#c-split").value !== "1" ? "採用ページ数とPDFページ数が一致しない" : null,
+      "OCRなし：透明テキスト層は無い（検索不可）",
+    ].filter(Boolean),
+    pages: kept.map((p, i) => ({n: i+1, t: Number(p.t.toFixed ? p.t.toFixed(2) : p.t), ahash: hashHex(p.hash), dup: !!p.dup, protected: !!p.protected})),
+  };
+  $("#report").textContent = JSON.stringify(rep, null, 2);
+}
+$("#btn-copy").addEventListener("click", async () => {
+  const t = $("#report").textContent;
+  try { await navigator.clipboard.writeText(t); $("#btn-copy").textContent = "写した"; setTimeout(() => $("#btn-copy").textContent = "記録を写す", 1600); }
+  catch(e){
+    const r = document.createRange(); r.selectNodeContents($("#report"));
+    const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r);
+  }
+});
+</script>

@@ -6,7 +6,7 @@
 **処理はすべてブラウザの中で完結し、通信は一切しない。** 画像・PDF・記録はどこへも送信されない。
 サーバーもアカウントも要らない。開いた時点で全機能が手元にある。
 
-→ https://ryomiyagawa185-crypto.github.io/shikaban-rebinder/
+→ https://miyagawa-code.github.io/shikaban-rebinder/
 
 Safari の「共有 → ホーム画面に追加」でアプリとして常駐する。
 
